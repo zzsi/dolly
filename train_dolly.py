@@ -58,7 +58,7 @@ import os
 from datetime import datetime
 from training.trainer import load_training_dataset, load_tokenizer
 
-dbutils.widgets.text("num_gpus", "", "num_gpus")
+# dbutils.widgets.text("num_gpus", "", "num_gpus")
 
 # COMMAND ----------
 
@@ -83,7 +83,8 @@ local_output_dir = os.path.join(local_training_root, checkpoint_dir_name)
 dbfs_output_dir = os.path.join("/dbfs/dolly_training", checkpoint_dir_name)
 
 num_gpus_flag = ""
-num_gpus = dbutils.widgets.get("num_gpus")
+# num_gpus = dbutils.widgets.get("num_gpus")
+num_gpus = 8
 if num_gpus:
     num_gpus = int(num_gpus)
     num_gpus_flag = f"--num_gpus={num_gpus}"
@@ -114,3 +115,15 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # MAGIC     --lr 1e-5
 
 # COMMAND ----------
+
+print(f"""
+deepspeed {num_gpus_flag} \
+    --module training.trainer \
+--deepspeed {deepspeed_config} \
+--epochs 1 \
+--local-output-dir {local_output_dir} \
+--dbfs-output-dir {dbfs_output_dir} \
+--per-device-train-batch-size 8 \
+--per-device-eval-batch-size 8 \
+--lr 1e-5
+""")
